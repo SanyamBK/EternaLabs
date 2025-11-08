@@ -13,7 +13,18 @@ import path from 'path';
 
 const fastify = Fastify({ logger: true });
 
-// Swagger/OpenAPI Documentation
+fastify.register(cors, {
+  origin: true,
+  credentials: true
+});
+
+fastify.register(websocketPlugin, {
+  options: {
+    maxPayload: 1048576
+  }
+});
+
+// Swagger/OpenAPI Documentation - register BEFORE routes but UI AFTER
 fastify.register(swagger, {
   openapi: {
     info: {
@@ -40,26 +51,6 @@ fastify.register(swagger, {
       { name: 'Orders', description: 'Order execution endpoints' },
       { name: 'Health', description: 'Health check endpoints' }
     ]
-  }
-});
-
-fastify.register(swaggerUi, {
-  routePrefix: '/documentation',
-  uiConfig: {
-    docExpansion: 'list',
-    deepLinking: true
-  },
-  staticCSP: true
-});
-
-fastify.register(cors, {
-  origin: true,
-  credentials: true
-});
-
-fastify.register(websocketPlugin, {
-  options: {
-    maxPayload: 1048576
   }
 });
 
@@ -225,7 +216,7 @@ fastify.post('/api/orders/execute', {
 
 // WebSocket endpoint for real-time updates (must be in separate plugin for @fastify/websocket)
 fastify.register(async function (fastify) {
-  fastify.get('/api/orders/execute', { 
+  fastify.get('/api/orders/execute', {
     websocket: true,
     schema: {
       hide: true  // Hide from Swagger since WebSocket isn't well supported in OpenAPI
@@ -258,6 +249,16 @@ fastify.register(async function (fastify) {
       }
     });
   });
+});
+
+// Register Swagger UI AFTER all routes are defined
+fastify.register(swaggerUi, {
+  routePrefix: '/documentation',
+  uiConfig: {
+    docExpansion: 'list',
+    deepLinking: true
+  },
+  staticCSP: true
 });
 
 const start = async () => {

@@ -24,6 +24,27 @@ const orderService = new OrderService(wsManager);
 // start worker
 startOrderWorker(wsManager);
 
+// Root endpoint with API info
+fastify.get('/', async (request, reply) => {
+  return {
+    name: 'EternaLabs Order Execution Engine',
+    version: '1.0.0',
+    status: 'running',
+    endpoints: {
+      'POST /api/orders/execute': 'Submit a new order',
+      'GET /api/orders/execute (WebSocket)': 'Subscribe to order updates',
+      'GET /health': 'Health check'
+    },
+    docs: 'https://github.com/SanyamBK/EternaLabs',
+    deployment: 'Railway'
+  };
+});
+
+// Health check endpoint
+fastify.get('/health', async (request, reply) => {
+  return { status: 'healthy', timestamp: new Date().toISOString() };
+});
+
 // HTTP POST endpoint for order submission
 fastify.post('/api/orders/execute', async (request, reply) => {
   const body = request.body as any;

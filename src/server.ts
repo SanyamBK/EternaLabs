@@ -223,9 +223,14 @@ fastify.post('/api/orders/execute', {
   return reply.code(202).send({ orderId, ws: `/api/orders/execute` });
 });
 
-// WebSocket endpoint for real-time updates
+// WebSocket endpoint for real-time updates (must be in separate plugin for @fastify/websocket)
 fastify.register(async function (fastify) {
-  fastify.get('/api/orders/execute', { websocket: true }, (connection, req) => {
+  fastify.get('/api/orders/execute', { 
+    websocket: true,
+    schema: {
+      hide: true  // Hide from Swagger since WebSocket isn't well supported in OpenAPI
+    }
+  }, (connection, req) => {
     // Attach immediately if orderId is in query string
     const orderId = (req.query as any)?.orderId;
     if (orderId) {

@@ -1,16 +1,22 @@
 import Fastify from 'fastify';
 import websocketPlugin from '@fastify/websocket';
+import cors from '@fastify/cors';
 import { v4 as uuidv4 } from 'uuid';
 import { OrderService } from './services/OrderService';
 import { WebsocketManager } from './services/WebsocketManager';
 import { startOrderWorker } from './processors/orderProcessor';
-import dotenv from 'dotenv';
 import { Order } from './types';
 
-dotenv.config();
-
 const fastify = Fastify({ logger: true });
-fastify.register(websocketPlugin);
+fastify.register(cors, {
+  origin: true,
+  credentials: true
+});
+fastify.register(websocketPlugin, {
+  options: {
+    maxPayload: 1048576
+  }
+});
 
 const wsManager = new WebsocketManager();
 const orderService = new OrderService(wsManager);
@@ -18,46 +24,47 @@ const orderService = new OrderService(wsManager);
 // start worker
 startOrderWorker(wsManager);
 
-fastify.route({
-  url: '/api/orders/execute',
-  method: ['POST', 'GET'],
-  wsHandler: (conn, req) => {
-    conn.on('message', async (msg: Buffer) => {
+// HTTP POST endpoint for order submission
+fastify.post('/api/orders/execute', async (request, reply) => {
+  const body = request.body as any;
+  if (!body || !body.tokenIn || !body.tokenOut || !body.amountIn) {
+    return reply.code(400).send({ error: 'missing required fields: tokenIn, tokenOut, amountIn' });
+  }
+  const orderId = uuidv4();
+  const order: Order = {
+    id: orderId,
+    userId: body.userId || 'anon',
+    type: body.type || 'market',
+    tokenIn: body.tokenIn,
+    tokenOut: body.tokenOut,
+    amountIn: body.amountIn,
+    createdAt: new Date().toISOString(),
+    attempts: 0
+  };
+  await orderService.createOrderAndEnqueue(order);
+  return reply.code(202).send({ orderId, ws: `/api/orders/execute` });
+});
+
+// WebSocket endpoint for real-time updates
+fastify.register(async function (fastify) {
+  fastify.get('/api/orders/execute', { websocket: true }, (connection, req) => {
+    connection.on('message', async (msg: Buffer) => {
       try {
         const data = JSON.parse(msg.toString());
         if (data && data.order) {
-          const id = await orderService.createOrderAndEnqueue(data.order as Order, conn);
-          conn.send(JSON.stringify({ orderId: id }));
+          const id = await orderService.createOrderAndEnqueue(data.order as Order, connection);
+          connection.send(JSON.stringify({ orderId: id }));
         } else if (data && data.subscribeOrderId) {
-          wsManager.attach(conn, data.subscribeOrderId);
-          conn.send(JSON.stringify({ subscribed: data.subscribeOrderId }));
+          wsManager.attach(connection, data.subscribeOrderId);
+          connection.send(JSON.stringify({ subscribed: data.subscribeOrderId }));
         } else {
-          conn.send(JSON.stringify({ error: 'invalid payload' }));
+          connection.send(JSON.stringify({ error: 'invalid payload' }));
         }
       } catch (err) {
-        conn.send(JSON.stringify({ error: 'invalid payload' }));
+        connection.send(JSON.stringify({ error: 'invalid payload' }));
       }
     });
-  },
-  handler: async (request, reply) => {
-    const body = request.body as any;
-    if (!body || !body.tokenIn || !body.tokenOut || !body.amountIn) {
-      return reply.code(400).send({ error: 'missing required fields: tokenIn, tokenOut, amountIn' });
-    }
-    const orderId = uuidv4();
-    const order: Order = {
-      id: orderId,
-      userId: body.userId || 'anon',
-      type: body.type || 'market',
-      tokenIn: body.tokenIn,
-      tokenOut: body.tokenOut,
-      amountIn: body.amountIn,
-      createdAt: new Date().toISOString(),
-      attempts: 0
-    };
-    await orderService.createOrderAndEnqueue(order);
-    return reply.code(202).send({ orderId, ws: `/api/orders/execute` });
-  }
+  });
 });
 
 const start = async () => {

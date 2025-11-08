@@ -1,5 +1,7 @@
 # Order Execution Engine — Mock Implementation
 
+🔗 **GitHub Repository**: https://github.com/SanyamBK/EternaLabs.git
+
 ## Overview
 This repository implements a mock order execution engine for a single order type (market orders by default) with DEX routing, real-time WebSocket status updates, and an order processing queue. The DEX router simulates Raydium and Meteora with realistic network delays and price variance.
 

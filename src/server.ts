@@ -226,6 +226,13 @@ fastify.post('/api/orders/execute', {
 // WebSocket endpoint for real-time updates
 fastify.register(async function (fastify) {
   fastify.get('/api/orders/execute', { websocket: true }, (connection, req) => {
+    // Attach immediately if orderId is in query string
+    const orderId = (req.query as any)?.orderId;
+    if (orderId) {
+      wsManager.attach(connection, orderId);
+      connection.send(JSON.stringify({ subscribed: orderId }));
+    }
+
     connection.on('message', async (msg: Buffer) => {
       try {
         const data = JSON.parse(msg.toString());
@@ -233,8 +240,11 @@ fastify.register(async function (fastify) {
           const id = await orderService.createOrderAndEnqueue(data.order as Order, connection);
           connection.send(JSON.stringify({ orderId: id }));
         } else if (data && data.subscribeOrderId) {
-          wsManager.attach(connection, data.subscribeOrderId);
-          connection.send(JSON.stringify({ subscribed: data.subscribeOrderId }));
+          // Socket already attached from query string, just acknowledge
+          if (!orderId || orderId !== data.subscribeOrderId) {
+            wsManager.attach(connection, data.subscribeOrderId);
+            connection.send(JSON.stringify({ subscribed: data.subscribeOrderId }));
+          }
         } else {
           connection.send(JSON.stringify({ error: 'invalid payload' }));
         }

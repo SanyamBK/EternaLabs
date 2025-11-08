@@ -364,7 +364,10 @@
     </div>
 
     <script>
-        const API_URL = 'https://eternalabs-production.up.railway.app';
+        // Auto-detect API URL based on current host
+        const API_URL = window.location.hostname === 'localhost' || window.location.hostname === '127.0.0.1'
+            ? `http://localhost:${window.location.port || 3000}`
+            : 'https://eternalabs-production.up.railway.app';
         let stats = { total: 0, confirmed: 0, active: 0 };
         let activeConnections = new Set();
 
@@ -414,7 +417,6 @@
                 const orderId = data.orderId;
 
                 stats.total++;
-                stats.active++;
                 updateStats();
 
                 document.getElementById('status').style.display = 'block';
@@ -446,7 +448,11 @@
 
                     let message = `<strong>${data.status.toUpperCase()}</strong>`;
 
-                    if (data.status === 'routing') {
+                    if (data.status === 'pending') {
+                        // Increment active count when order actually starts processing
+                        stats.active++;
+                        updateStats();
+                    } else if (data.status === 'routing') {
                         message += ' | Comparing DEX prices...';
                     } else if (data.status === 'building' && data.chosenDex) {
                         message += ` | <strong>DEX Selected:</strong> ${data.chosenDex}`;
@@ -458,12 +464,12 @@
                         if (data.txHash) message += ` | <strong>TX:</strong> <code>${data.txHash.substring(0, 20)}...</code>`;
                         if (data.executedPrice) message += ` | <strong>Price:</strong> ${data.executedPrice.toFixed(4)}`;
                         stats.confirmed++;
-                        stats.active--;
+                        stats.active = Math.max(0, stats.active - 1);
                         updateStats();
                     } else if (data.status === 'failed') {
                         message += ` | <strong>❌ Failed</strong>`;
                         if (data.error) message += ` | ${data.error}`;
-                        stats.active--;
+                        stats.active = Math.max(0, stats.active - 1);
                         updateStats();
                     }
 

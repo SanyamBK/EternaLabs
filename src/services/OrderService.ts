@@ -7,7 +7,7 @@ import { Pool } from 'pg';
 const pool = new Pool({ connectionString: process.env.DATABASE_URL });
 
 export class OrderService {
-  constructor(private wsManager: WebsocketManager) {}
+  constructor(private wsManager: WebsocketManager) { }
 
   async createOrderAndEnqueue(order: Partial<Order>, wsConn?: any) {
     const id = order.id || uuidv4();
@@ -37,7 +37,6 @@ export class OrderService {
       this.wsManager.attach(wsConn, id);
     }
     await orderQueue.add('execute', o, { jobId: id });
-    this.wsManager.emit(id, { status: 'pending' });
     return id;
   }
 }

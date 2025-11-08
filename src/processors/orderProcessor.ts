@@ -25,19 +25,24 @@ export function startOrderWorker(wsManager: WebsocketManager) {
 
         // Delay to ensure WebSocket connection is fully established
         // This gives the client time to connect and subscribe
-        await new Promise(resolve => setTimeout(resolve, 500));
+        await new Promise(resolve => setTimeout(resolve, 2000));
 
         wsManager.emit(id, { status: 'pending' });
+        await new Promise(resolve => setTimeout(resolve, 800));
 
         try {
             wsManager.emit(id, { status: 'routing' });
+            await new Promise(resolve => setTimeout(resolve, 800));
+
             const [r, m] = await Promise.all([
                 dex.getRaydiumQuote(order.tokenIn, order.tokenOut, order.amountIn),
                 dex.getMeteoraQuote(order.tokenIn, order.tokenOut, order.amountIn)
             ]);
             const chosen = r.price < m.price ? r : m;
+            await new Promise(resolve => setTimeout(resolve, 800));
             wsManager.emit(id, { status: 'building', chosenDex: chosen.dex, quote: chosen });
 
+            await new Promise(resolve => setTimeout(resolve, 800));
             wsManager.emit(id, { status: 'submitted', chosenDex: chosen.dex });
             const res = await dex.executeSwap(chosen.dex, order);
             wsManager.emit(id, { status: 'confirmed', txHash: res.txHash, executedPrice: res.executedPrice });

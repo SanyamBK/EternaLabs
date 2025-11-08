@@ -3,11 +3,14 @@ import IORedis from 'ioredis';
 import { MockDexRouter } from '../services/MockDexRouter';
 import { WebsocketManager } from '../services/WebsocketManager';
 
-const connection = new IORedis({
-    host: process.env.REDIS_HOST || '127.0.0.1',
-    port: Number(process.env.REDIS_PORT || 6379),
-    maxRetriesPerRequest: null
-});
+// Support both REDIS_URL (Railway) and separate REDIS_HOST/REDIS_PORT (local)
+const connection = process.env.REDIS_URL
+    ? new IORedis(process.env.REDIS_URL, { maxRetriesPerRequest: null })
+    : new IORedis({
+        host: process.env.REDIS_HOST || '127.0.0.1',
+        port: Number(process.env.REDIS_PORT || 6379),
+        maxRetriesPerRequest: null
+    });
 
 export { connection as orderProcessorConnection };
 

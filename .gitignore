@@ -37,6 +37,7 @@ Thumbs.db
 # Documentation
 COMPLETION_STATUS.md
 *.pdf
+report/
 
 # Deployment
 deployment_logs/

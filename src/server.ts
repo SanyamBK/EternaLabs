@@ -247,6 +247,9 @@ fastify.register(async function (fastify) {
 
 const start = async () => {
   try {
+    // Wait for all plugins to be registered
+    await fastify.ready();
+
     await fastify.listen({ port: process.env.PORT ? Number(process.env.PORT) : 3000, host: '0.0.0.0' });
     fastify.log.info('server started');
   } catch (err) {

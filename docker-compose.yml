@@ -5,7 +5,7 @@ services:
     ports:
       - "6379:6379"
     healthcheck:
-      test: ["CMD", "redis-cli", "ping"]
+      test: [ "CMD", "redis-cli", "ping" ]
       interval: 5s
       timeout: 5s
       retries: 5
@@ -21,15 +21,12 @@ services:
     volumes:
       - pgdata:/var/lib/postgresql/data
     healthcheck:
-      test: ["CMD", "pg_isready", "-U", "postgres"]
+      test: [ "CMD", "pg_isready", "-U", "postgres" ]
       interval: 5s
       retries: 5
 
   app:
     build: .
-    command: npm run dev
-    volumes:
-      - ./:/usr/src/app
     ports:
       - "3000:3000"
     environment:
@@ -37,8 +34,10 @@ services:
       - REDIS_PORT=6379
       - DATABASE_URL=postgresql://postgres:postgres@postgres:5432/orders
     depends_on:
-      - redis
-      - postgres
+      redis:
+        condition: service_healthy
+      postgres:
+        condition: service_healthy
 
 volumes:
   pgdata:

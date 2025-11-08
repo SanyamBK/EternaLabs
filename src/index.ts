@@ -22,9 +22,9 @@ async function ensureTablesExist() {
                 last_error TEXT
             );
         `);
-        console.log('✅ Database tables verified/created');
+        console.log('[OK] Database tables verified/created');
     } catch (error) {
-        console.error('⚠️  Database migration warning:', error);
+        console.error('[WARN] Database migration warning:', error);
     }
 }
 

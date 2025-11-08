@@ -1,13 +1,13 @@
 import Fastify from 'fastify';
 import websocketPlugin from '@fastify/websocket';
 import cors from '@fastify/cors';
-import fastifyStatic from '@fastify/static';
-import path from 'path';
 import { v4 as uuidv4 } from 'uuid';
 import { OrderService } from './services/OrderService';
 import { WebsocketManager } from './services/WebsocketManager';
 import { startOrderWorker } from './processors/orderProcessor';
 import { Order } from './types';
+import fs from 'fs';
+import path from 'path';
 
 const fastify = Fastify({ logger: true });
 fastify.register(cors, {
@@ -18,10 +18,6 @@ fastify.register(websocketPlugin, {
   options: {
     maxPayload: 1048576
   }
-});
-fastify.register(fastifyStatic, {
-  root: path.join(__dirname, '..', 'public'),
-  prefix: '/demo/',
 });
 
 const wsManager = new WebsocketManager();
@@ -49,6 +45,17 @@ fastify.get('/', async (request, reply) => {
 // Health check endpoint
 fastify.get('/health', async (request, reply) => {
   return { status: 'healthy', timestamp: new Date().toISOString() };
+});
+
+// Demo UI endpoint
+fastify.get('/demo', async (request, reply) => {
+  const htmlPath = path.join(__dirname, '..', 'public', 'demo.html');
+  try {
+    const html = fs.readFileSync(htmlPath, 'utf-8');
+    reply.type('text/html').send(html);
+  } catch (error) {
+    reply.code(404).send({ error: 'Demo page not found. Use the test-client-railway.html file locally.' });
+  }
 });
 
 // HTTP POST endpoint for order submission

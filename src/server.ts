@@ -22,20 +22,20 @@ fastify.route({
   url: '/api/orders/execute',
   method: ['POST', 'GET'],
   wsHandler: (conn, req) => {
-    conn.socket.on('message', async (msg) => {
+    conn.on('message', async (msg: Buffer) => {
       try {
         const data = JSON.parse(msg.toString());
         if (data && data.order) {
           const id = await orderService.createOrderAndEnqueue(data.order as Order, conn);
-          conn.socket.send(JSON.stringify({ orderId: id }));
+          conn.send(JSON.stringify({ orderId: id }));
         } else if (data && data.subscribeOrderId) {
-          wsManager.attach(conn.socket, data.subscribeOrderId);
-          conn.socket.send(JSON.stringify({ subscribed: data.subscribeOrderId }));
+          wsManager.attach(conn, data.subscribeOrderId);
+          conn.send(JSON.stringify({ subscribed: data.subscribeOrderId }));
         } else {
-          conn.socket.send(JSON.stringify({ error: 'invalid payload' }));
+          conn.send(JSON.stringify({ error: 'invalid payload' }));
         }
       } catch (err) {
-        conn.socket.send(JSON.stringify({ error: 'invalid payload' }));
+        conn.send(JSON.stringify({ error: 'invalid payload' }));
       }
     });
   },

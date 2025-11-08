@@ -3,38 +3,52 @@ import IORedis from 'ioredis';
 import { MockDexRouter } from '../services/MockDexRouter';
 import { WebsocketManager } from '../services/WebsocketManager';
 
-const connection = new IORedis({ host: process.env.REDIS_HOST || '127.0.0.1', port: Number(process.env.REDIS_PORT || 6379) });
+const connection = new IORedis({
+    host: process.env.REDIS_HOST || '127.0.0.1',
+    port: Number(process.env.REDIS_PORT || 6379),
+    maxRetriesPerRequest: null
+});
+
+export { connection as orderProcessorConnection };
+
+const workers: Worker[] = [];
 
 export function startOrderWorker(wsManager: WebsocketManager) {
-  const dex = new MockDexRouter();
+    const dex = new MockDexRouter();
 
-  const worker = new Worker('orders', async (job: Job) => {
-    const order = job.data;
-    const id = order.id;
-    wsManager.emit(id, { status: 'pending' });
+    const worker = new Worker('orders', async (job: Job) => {
+        const order = job.data;
+        const id = order.id;
+        wsManager.emit(id, { status: 'pending' });
 
-    try {
-      wsManager.emit(id, { status: 'routing' });
-      const [r, m] = await Promise.all([
-        dex.getRaydiumQuote(order.tokenIn, order.tokenOut, order.amountIn),
-        dex.getMeteoraQuote(order.tokenIn, order.tokenOut, order.amountIn)
-      ]);
-      const chosen = r.price < m.price ? r : m;
-      wsManager.emit(id, { status: 'building', chosenDex: chosen.dex, quote: chosen });
+        try {
+            wsManager.emit(id, { status: 'routing' });
+            const [r, m] = await Promise.all([
+                dex.getRaydiumQuote(order.tokenIn, order.tokenOut, order.amountIn),
+                dex.getMeteoraQuote(order.tokenIn, order.tokenOut, order.amountIn)
+            ]);
+            const chosen = r.price < m.price ? r : m;
+            wsManager.emit(id, { status: 'building', chosenDex: chosen.dex, quote: chosen });
 
-      wsManager.emit(id, { status: 'submitted', chosenDex: chosen.dex });
-      const res = await dex.executeSwap(chosen.dex, order);
-      wsManager.emit(id, { status: 'confirmed', txHash: res.txHash, executedPrice: res.executedPrice });
-      return { txHash: res.txHash };
-    } catch (err: any) {
-      wsManager.emit(id, { status: 'failed', error: err.message || String(err) });
-      throw err;
-    }
-  }, { connection, concurrency: 10 });
+            wsManager.emit(id, { status: 'submitted', chosenDex: chosen.dex });
+            const res = await dex.executeSwap(chosen.dex, order);
+            wsManager.emit(id, { status: 'confirmed', txHash: res.txHash, executedPrice: res.executedPrice });
+            return { txHash: res.txHash };
+        } catch (err: any) {
+            wsManager.emit(id, { status: 'failed', error: err.message || String(err) });
+            throw err;
+        }
+    }, { connection, concurrency: 10 });
 
-  worker.on('failed', (job, err) => {
-    console.error('job failed', job.id, err.message);
-  });
+    worker.on('failed', (job, err) => {
+        console.error('job failed', job?.id, err.message);
+    });
 
-  return worker;
+    workers.push(worker);
+    return worker;
+}
+
+export async function closeAllWorkers() {
+    await Promise.all(workers.map(w => w.close()));
+    workers.length = 0;
 }

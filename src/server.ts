@@ -1,6 +1,8 @@
 import Fastify from 'fastify';
 import websocketPlugin from '@fastify/websocket';
 import cors from '@fastify/cors';
+import fastifyStatic from '@fastify/static';
+import path from 'path';
 import { v4 as uuidv4 } from 'uuid';
 import { OrderService } from './services/OrderService';
 import { WebsocketManager } from './services/WebsocketManager';
@@ -16,6 +18,10 @@ fastify.register(websocketPlugin, {
   options: {
     maxPayload: 1048576
   }
+});
+fastify.register(fastifyStatic, {
+  root: path.join(__dirname, '..', 'public'),
+  prefix: '/demo/',
 });
 
 const wsManager = new WebsocketManager();

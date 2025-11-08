@@ -22,6 +22,11 @@ export function startOrderWorker(wsManager: WebsocketManager) {
     const worker = new Worker('orders', async (job: Job) => {
         const order = job.data;
         const id = order.id;
+
+        // Delay to ensure WebSocket connection is fully established
+        // This gives the client time to connect and subscribe
+        await new Promise(resolve => setTimeout(resolve, 500));
+
         wsManager.emit(id, { status: 'pending' });
 
         try {

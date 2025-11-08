@@ -34,4 +34,10 @@ logs/
 # OS
 Thumbs.db
 
+# Documentation
 COMPLETION_STATUS.md
+*.pdf
+
+# Deployment
+deployment_logs/
+init-railway-db.sql

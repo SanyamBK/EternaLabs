@@ -1,6 +1,8 @@
 # Order Execution Engine — Mock Implementation
 
-🔗 **GitHub Repository**: https://github.com/SanyamBK/EternaLabs.git
+🔗 **GitHub Repository**: https://github.com/SanyamBK/EternaLabs.git  
+🚀 **Live Deployment**: https://eternalabs-production.up.railway.app  
+📺 **Demo Video**: [YouTube Link - Coming Soon]
 
 ## Overview
 This repository implements a mock order execution engine for a single order type (market orders by default) with DEX routing, real-time WebSocket status updates, and an order processing queue. The DEX router simulates Raydium and Meteora with realistic network delays and price variance.
@@ -75,9 +77,25 @@ Import `postman/OrderExecution.postman_collection.json` to experiment.
 
 ## Deployment
 
-* For a single instance quick deployment use Railway / Render.
-* Use managed Redis and Postgres for production.
-* Replace MockDexRouter with Raydium/Meteora SDKs for real devnet execution (see docs in `/docs`).
+**Live on Railway**: https://eternalabs-production.up.railway.app
+
+The application is deployed with:
+* Managed Redis instance (Railway Redis service)
+* Managed PostgreSQL database (Railway Postgres service)
+* Auto-deployment from GitHub main branch
+
+To test the live API:
+```bash
+curl -X POST https://eternalabs-production.up.railway.app/api/orders/execute \
+  -H "Content-Type: application/json" \
+  -d '{"tokenIn":"SOL","tokenOut":"USDC","amountIn":1.5}'
+```
+
+Or open `test-client-railway.html` in your browser for a visual test client.
+
+### Local Deployment
+* For local development, use Docker Compose (see Quickstart above)
+* Replace MockDexRouter with Raydium/Meteora SDKs for real devnet execution
 
 ## Next steps (if you want real devnet)
 

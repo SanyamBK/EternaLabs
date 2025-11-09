@@ -1,7 +1,9 @@
 # Order Execution Engine — Mock Implementation
 
-🔗 **GitHub Repository**: https://github.com/SanyamBK/EternaLabs.git  
+🔗 **GitHub Repository**: https://github.com/SanyamBK/EternaLabs  
 🚀 **Live Deployment**: https://eternalabs-production.up.railway.app  
+🎮 **Interactive Demo**: https://eternalabs-production.up.railway.app/demo  
+📚 **API Documentation**: https://eternalabs-production.up.railway.app/documentation  
 📺 **Demo Video**: [YouTube Link - Coming Soon]
 
 ## Overview
@@ -24,10 +26,10 @@ I implemented **market orders** to demonstrate the full execution lifecycle and 
 ## Quickstart (local)
 1. Clone and install:
 ```bash
-git clone https://github.com/SanyamBK/order-exec-engine.git
-cd order-exec-engine
+git clone https://github.com/SanyamBK/EternaLabs.git
+cd EternaLabs
 npm install
-````
+```
 
 2. Start with Docker:
 
@@ -85,13 +87,23 @@ The application is deployed with:
 * Auto-deployment from GitHub main branch
 
 To test the live API:
+
+**Interactive Demo UI:**
+Visit https://eternalabs-production.up.railway.app/demo for a full-featured web interface with:
+- Real-time order status updates via WebSocket
+- Visual display of DEX routing decisions (Raydium vs Meteora)
+- Quick test buttons for common token pairs
+- Live statistics dashboard
+
+**API Documentation:**
+Visit https://eternalabs-production.up.railway.app/documentation for Swagger/OpenAPI docs
+
+**cURL Example:**
 ```bash
 curl -X POST https://eternalabs-production.up.railway.app/api/orders/execute \
   -H "Content-Type: application/json" \
   -d '{"tokenIn":"SOL","tokenOut":"USDC","amountIn":1.5}'
 ```
-
-Or open `test-client-railway.html` in your browser for a visual test client.
 
 ### Local Deployment
 * For local development, use Docker Compose (see Quickstart above)

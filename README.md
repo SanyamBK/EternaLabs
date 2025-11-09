@@ -3,7 +3,6 @@
 🔗 **GitHub Repository**: https://github.com/SanyamBK/EternaLabs  
 🚀 **Live Deployment**: https://eternalabs-production.up.railway.app  
 🎮 **Interactive Demo**: https://eternalabs-production.up.railway.app/demo  
-📚 **API Documentation**: https://eternalabs-production.up.railway.app/documentation  
 📺 **Demo Video**: https://youtu.be/SGaKzuuAVn4
 
 ## Overview

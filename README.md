@@ -4,7 +4,7 @@
 🚀 **Live Deployment**: https://eternalabs-production.up.railway.app  
 🎮 **Interactive Demo**: https://eternalabs-production.up.railway.app/demo  
 📚 **API Documentation**: https://eternalabs-production.up.railway.app/documentation  
-📺 **Demo Video**: [YouTube Link - Coming Soon]
+📺 **Demo Video**: https://youtu.be/SGaKzuuAVn4
 
 ## Overview
 This repository implements a mock order execution engine for a single order type (market orders by default) with DEX routing, real-time WebSocket status updates, and an order processing queue. The DEX router simulates Raydium and Meteora with realistic network delays and price variance.

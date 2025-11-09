@@ -94,9 +94,6 @@ Visit https://eternalabs-production.up.railway.app/demo for a full-featured web 
 - Quick test buttons for common token pairs
 - Live statistics dashboard
 
-**API Documentation:**
-Visit https://eternalabs-production.up.railway.app/documentation for Swagger/OpenAPI docs
-
 **cURL Example:**
 ```bash
 curl -X POST https://eternalabs-production.up.railway.app/api/orders/execute \
